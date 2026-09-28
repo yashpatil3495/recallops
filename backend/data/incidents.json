@@ -1,0 +1,174 @@
+[
+  {
+    "incident_id": "INC-001",
+    "service": "payment-api",
+    "environment": "production",
+    "severity": "critical",
+    "timestamp": "2026-09-15T14:32:00Z",
+    "symptoms": [
+      "HTTP 500 errors spike",
+      "database connection timeout",
+      "p99 latency > 8000ms"
+    ],
+    "logs": "TimeoutError: connection pool exhausted after 30000ms. Active: 50, Max: 50, Pending: 142",
+    "attempts": [
+      {
+        "action": "Restart application pods",
+        "result": "FAILED"
+      },
+      {
+        "action": "Increase request timeout to 30s",
+        "result": "FAILED"
+      },
+      {
+        "action": "Clear connection pool manually",
+        "result": "PARTIAL"
+      },
+      {
+        "action": "Increase DB connection pool size from 50 to 150",
+        "result": "SUCCESS"
+      }
+    ],
+    "root_cause": "DB connection pool exhaustion under peak traffic",
+    "resolution": "Increased DB connection pool from 50 to 150 and established pool utilization alert",
+    "outcome": "RESOLVED"
+  },
+  {
+    "incident_id": "INC-002",
+    "service": "auth-service",
+    "environment": "production",
+    "severity": "high",
+    "timestamp": "2026-09-18T09:15:00Z",
+    "symptoms": [
+      "User login failures",
+      "JWT token validation errors",
+      "HTTP 401 Unauthorized spike"
+    ],
+    "logs": "InvalidTokenError: Signature verification failed. Key ID 'auth-2026-b' not found in cache",
+    "attempts": [
+      {
+        "action": "Restart auth service instances",
+        "result": "FAILED"
+      },
+      {
+        "action": "Flush Redis session cache",
+        "result": "FAILED"
+      },
+      {
+        "action": "Rollback JWT secret rotation and re-sync keys",
+        "result": "SUCCESS"
+      }
+    ],
+    "root_cause": "JWT secret rotation executed without propagating key to all regional edge instances",
+    "resolution": "Rolled back key rotation, verified edge key propagation, and completed gradual rollout",
+    "outcome": "RESOLVED"
+  },
+  {
+    "incident_id": "INC-003",
+    "service": "payment-api",
+    "environment": "production",
+    "severity": "critical",
+    "timestamp": "2026-09-22T19:40:00Z",
+    "symptoms": [
+      "HTTP 500 Internal Server Error",
+      "database connection refused",
+      "DB connection timeout"
+    ],
+    "logs": "OperationalError: PoolMaxConnectionsExceeded: pool max 150 reached during flash sale",
+    "attempts": [
+      {
+        "action": "Restart application pods",
+        "result": "FAILED"
+      },
+      {
+        "action": "Scale database connection pool to 250",
+        "result": "SUCCESS"
+      }
+    ],
+    "root_cause": "DB connection pool exhaustion under flash sale traffic surge",
+    "resolution": "Scaled connection pool size to 250 and enabled connection pooling proxy (PgBouncer)",
+    "outcome": "RESOLVED"
+  },
+  {
+    "incident_id": "INC-004",
+    "service": "recommendation-engine",
+    "environment": "production",
+    "severity": "medium",
+    "timestamp": "2026-09-24T11:05:00Z",
+    "symptoms": [
+      "High memory utilization > 95%",
+      "OOMKilled pod evictions",
+      "Intermittent slow query responses"
+    ],
+    "logs": "kernel: Out of memory: Kill process 4812 (python) score 982 or sacrifice child",
+    "attempts": [
+      {
+        "action": "Restart killed worker pods",
+        "result": "PARTIAL"
+      },
+      {
+        "action": "Increase pod memory limit from 2Gi to 4Gi and patch LRU cache leak",
+        "result": "SUCCESS"
+      }
+    ],
+    "root_cause": "Unbounded vector embedding cache leak in recommendation model inference loop",
+    "resolution": "Introduced LRU eviction policy with strict memory bounds and increased worker memory to 4Gi",
+    "outcome": "RESOLVED"
+  },
+  {
+    "incident_id": "INC-005",
+    "service": "notification-service",
+    "environment": "production",
+    "severity": "high",
+    "timestamp": "2026-09-26T04:20:00Z",
+    "symptoms": [
+      "Transactional emails not delivering",
+      "RabbitMQ message queue backlog exceeding 50,000",
+      "Worker task timeouts"
+    ],
+    "logs": "SMTPServerDisconnected: Connection unexpectedly closed by smtp.primary.internal",
+    "attempts": [
+      {
+        "action": "Restart notification consumer workers",
+        "result": "FAILED"
+      },
+      {
+        "action": "Purge dead letter queue",
+        "result": "FAILED"
+      },
+      {
+        "action": "Failover to backup secondary SMTP relay gateway",
+        "result": "SUCCESS"
+      }
+    ],
+    "root_cause": "Primary upstream SMTP provider network outage and DNS resolution failure",
+    "resolution": "Failed over to secondary SMTP relay provider and enabled automated provider failover routing",
+    "outcome": "RESOLVED"
+  },
+  {
+    "incident_id": "INC-TEST-01",
+    "service": "payment-api",
+    "environment": "production",
+    "severity": "critical",
+    "symptoms": [
+      "HTTP 500 errors",
+      "DB connection timeout"
+    ],
+    "logs": "Connection pool timeout after 30000ms",
+    "attempts": [
+      {
+        "action": "Restart pods",
+        "result": "FAILED"
+      },
+      {
+        "action": "Increase DB connection pool",
+        "result": "SUCCESS"
+      }
+    ],
+    "root_cause": "Database connection pool exhaustion under load",
+    "resolution": "Increased pool size to 150",
+    "outcome": "RESOLVED",
+    "timestamp": "2026-09-28T14:13:53.239510+00:00",
+    "failed_attempts": 1
+  }
+]

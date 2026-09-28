@@ -1,0 +1,21 @@
+# RecallOps - Memory & Agent Contract
+
+- Memory:
+  - `store_incident(incident)`: retain full lifecycle text to Hindsight bank, and append structured incident to `backend/data/incidents.json`.
+  - `recall_similar(symptoms, service=None)`: call Hindsight recall. Fall back to local search in `incidents.json` if Hindsight returns empty.
+  - `summarize_learned_patterns()`: call Hindsight reflect with fallback string.
+  - `get_memory_stats()`: compute from structured fields in `incidents.json`. Try `list_memories` for Hindsight count if available.
+- Frozen Analyze Output Shape:
+  - `is_recurring`: bool
+  - `recurrence_confidence`: float (0.0 to 1.0)
+  - `similar_incidents`: list[str] (e.g. ["INC-001", "INC-003"])
+  - `identified_pattern`: str
+  - `previously_failed`: list[str]
+  - `previously_succeeded`: list[str]
+  - `root_cause_hypothesis`: str
+  - `next_diagnostic_action`: str
+  - `recommended_fix`: str
+  - `reasoning`: str
+  - `raw_memories`: list[dict]
+- Critical Agent Rule: NEVER recommend any action that appears in `previously_failed`.
+- Enforce in prompt and programmatically sanitize output in code.
