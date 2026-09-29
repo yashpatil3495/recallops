@@ -1,6 +1,10 @@
 # RecallOps - Frozen API Contract
 
 > **Specification Status:** FROZEN. The frontend and backend must strictly conform to these shapes.
+>
+> **v1.1 Additive Changes:**
+> - Added `GET /health/deep` endpoint.
+> - Added optional v1.1 fields to `/analyze` response: `guardrail_events`, `evidence`, `memory_source`, and `degraded`.
 
 Base URL: `http://localhost:8000` (or `NEXT_PUBLIC_API_URL`)
 
@@ -15,6 +19,16 @@ Base URL: `http://localhost:8000` (or `NEXT_PUBLIC_API_URL`)
   "status": "ok",
   "service": "recallops-backend",
   "timestamp": "2026-09-28T13:30:00.000000+00:00"
+}
+```
+
+### `GET /health/deep` (v1.1)
+```json
+{
+  "status": "ok",
+  "groq": { "ok": true },
+  "hindsight": { "ok": true },
+  "local_incidents": 5
 }
 ```
 
@@ -46,7 +60,7 @@ Analyzes incoming symptoms against persistent memory and Groq LLM reasoning.
   "success": true,
   "analysis": {
     "is_recurring": true,
-    "recurrence_confidence": 0.96,
+    "recurrence_confidence": 0.87,
     "similar_incidents": [
       "INC-001",
       "INC-003"
@@ -74,7 +88,17 @@ Analyzes incoming symptoms against persistent memory and Groq LLM reasoning.
           "root_cause": "DB connection pool exhaustion under peak traffic"
         }
       }
-    ]
+    ],
+    "guardrail_events": [],
+    "evidence": [
+      {
+        "incident_id": "INC-001",
+        "action": "Restart application pods",
+        "result": "FAILED"
+      }
+    ],
+    "memory_source": "hindsight",
+    "degraded": false
   }
 }
 ```

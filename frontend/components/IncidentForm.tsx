@@ -8,17 +8,56 @@ interface Props {
   isLoading: boolean;
 }
 
+const PRESETS = [
+  {
+    id: "payment",
+    label: "Payment Outage",
+    icon: "💳",
+    description: "DB connection pool exhaustion",
+    data: {
+      service: "payment-api",
+      environment: "production",
+      severity: "critical",
+      symptoms: "HTTP 500 errors spike\ndatabase connection timeout\np99 latency > 8000ms",
+      logs: "TimeoutError: connection pool exhausted after 30000ms. Active: 50, Max: 50, Pending: 142",
+    },
+  },
+  {
+    id: "auth",
+    label: "Auth Token",
+    icon: "🔐",
+    description: "JWT validation failures",
+    data: {
+      service: "auth-service",
+      environment: "production",
+      severity: "high",
+      symptoms: "User login failures\nJWT token validation errors\nHTTP 401 Unauthorized spike",
+      logs: "InvalidTokenError: Signature verification failed. Key ID 'auth-2026-b' not found in cache",
+    },
+  },
+  {
+    id: "new",
+    label: "New Scenario",
+    icon: "🎬",
+    description: "Novel incident type",
+    data: {
+      service: "video-transcoder",
+      environment: "production",
+      severity: "low",
+      symptoms: "Audio pitch distortion on FLAC files\nSubtitles misaligned by 2 seconds",
+      logs: "DecoderInfo: Subtitle stream track 2 PTS timestamp mismatch by +2040ms",
+    },
+  },
+];
+
 export default function IncidentForm({ onAnalyze, isLoading }: Props) {
-  const [service, setService] = useState<string>("payment-api");
-  const [environment, setEnvironment] = useState<string>("production");
-  const [severity, setSeverity] = useState<string>("critical");
-  const [symptomsText, setSymptomsText] = useState<string>(
-    "HTTP 500 errors spike\ndatabase connection timeout\np99 latency > 8000ms"
-  );
-  const [logs, setLogs] = useState<string>(
-    "TimeoutError: connection pool exhausted after 30000ms. Active: 50, Max: 50, Pending: 142"
-  );
+  const [service, setService] = useState("");
+  const [environment, setEnvironment] = useState("production");
+  const [severity, setSeverity] = useState("critical");
+  const [symptomsText, setSymptomsText] = useState("");
+  const [logs, setLogs] = useState("");
   const [formError, setFormError] = useState<string | null>(null);
+  const [activePreset, setActivePreset] = useState<string | null>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,6 +67,10 @@ export default function IncidentForm({ onAnalyze, isLoading }: Props) {
       .map((s) => s.trim())
       .filter((s) => s.length > 0);
 
+    if (!service.trim()) {
+      setFormError("Service name is required.");
+      return;
+    }
     if (symptoms.length === 0) {
       setFormError("Please provide at least one symptom.");
       return;
@@ -42,160 +85,192 @@ export default function IncidentForm({ onAnalyze, isLoading }: Props) {
     });
   };
 
-  const loadPreset = (preset: "payment" | "auth" | "new") => {
+  const loadPreset = (preset: typeof PRESETS[number]) => {
     setFormError(null);
-    if (preset === "payment") {
-      setService("payment-api");
-      setEnvironment("production");
-      setSeverity("critical");
-      setSymptomsText("HTTP 500 errors spike\ndatabase connection timeout\np99 latency > 8000ms");
-      setLogs("TimeoutError: connection pool exhausted after 30000ms. Active: 50, Max: 50, Pending: 142");
-    } else if (preset === "auth") {
-      setService("auth-service");
-      setEnvironment("production");
-      setSeverity("high");
-      setSymptomsText("User login failures\nJWT token validation errors\nHTTP 401 Unauthorized spike");
-      setLogs("InvalidTokenError: Signature verification failed. Key ID 'auth-2026-b' not found in cache");
-    } else {
-      setService("video-transcoder");
-      setEnvironment("production");
-      setSeverity("low");
-      setSymptomsText("Audio pitch distortion on FLAC files\nSubtitles misaligned by 2 seconds");
-      setLogs("DecoderInfo: Subtitle stream track 2 PTS timestamp mismatch by +2040ms");
-    }
+    setActivePreset(preset.id);
+    setService(preset.data.service);
+    setEnvironment(preset.data.environment);
+    setSeverity(preset.data.severity);
+    setSymptomsText(preset.data.symptoms);
+    setLogs(preset.data.logs);
+  };
+
+  const clearForm = () => {
+    setService("");
+    setEnvironment("production");
+    setSeverity("critical");
+    setSymptomsText("");
+    setLogs("");
+    setFormError(null);
+    setActivePreset(null);
   };
 
   return (
-    <div className="bg-slate-900/90 border border-slate-800 rounded-xl p-5 shadow-xl">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-800/80 mb-4 gap-2">
-        <div className="flex items-center space-x-2">
-          <span className="text-cyan-400 font-mono text-sm">▶</span>
-          <h2 className="font-mono text-sm font-semibold text-slate-200 uppercase tracking-wider">
-            Incident Diagnosis Input
-          </h2>
+    <div className="space-y-5">
+      {/* Quick Presets */}
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-xs font-semibold text-text-muted uppercase tracking-wider">
+            Quick Presets
+          </h3>
+          {activePreset && (
+            <button
+              type="button"
+              onClick={clearForm}
+              className="btn-ghost text-[10px] text-text-muted"
+            >
+              Clear form
+            </button>
+          )}
         </div>
-
-        {/* Demo Quick Presets */}
-        <div className="flex items-center space-x-1.5 text-xs font-mono">
-          <span className="text-slate-400 text-[11px]">PRESETS:</span>
-          <button
-            type="button"
-            onClick={() => loadPreset("payment")}
-            className="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-cyan-400 border border-slate-700 transition cursor-pointer"
-          >
-            Payment Outage
-          </button>
-          <button
-            type="button"
-            onClick={() => loadPreset("auth")}
-            className="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-amber-400 border border-slate-700 transition cursor-pointer"
-          >
-            Auth Token
-          </button>
-          <button
-            type="button"
-            onClick={() => loadPreset("new")}
-            className="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-purple-400 border border-slate-700 transition cursor-pointer"
-          >
-            New Scenario
-          </button>
+        <div className="grid grid-cols-1 gap-2">
+          {PRESETS.map((preset) => (
+            <button
+              key={preset.id}
+              type="button"
+              onClick={() => loadPreset(preset)}
+              className={`flex items-center gap-3 p-3 rounded-lg text-left transition-all cursor-pointer border ${
+                activePreset === preset.id
+                  ? "bg-accent-muted border-accent/30 ring-1 ring-accent/20"
+                  : "bg-bg-tertiary border-border hover:border-text-muted/30 hover:bg-bg-hover"
+              }`}
+            >
+              <span className="text-lg flex-shrink-0">{preset.icon}</span>
+              <div className="min-w-0">
+                <p className={`text-xs font-semibold ${activePreset === preset.id ? "text-accent-hover" : "text-text-primary"}`}>
+                  {preset.label}
+                </p>
+                <p className="text-[10px] text-text-muted truncate">
+                  {preset.description}
+                </p>
+              </div>
+            </button>
+          ))}
         </div>
       </div>
 
+      {/* Divider */}
+      <div className="flex items-center gap-3">
+        <div className="flex-1 h-px bg-border" />
+        <span className="text-[10px] text-text-muted font-medium uppercase tracking-wider">
+          Incident Details
+        </span>
+        <div className="flex-1 h-px bg-border" />
+      </div>
+
+      {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-4">
         {formError && (
-          <div className="p-2.5 rounded bg-rose-950/80 border border-rose-800 text-xs font-mono text-rose-300">
-            ⚠ {formError}
+          <div className="p-3 rounded-lg bg-danger-muted border border-danger/20 text-sm text-danger flex items-center gap-2">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="15" y1="9" x2="9" y2="15" />
+              <line x1="9" y1="9" x2="15" y2="15" />
+            </svg>
+            {formError}
           </div>
         )}
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div>
-            <label className="block text-[11px] font-mono text-slate-400 uppercase mb-1">
-              Service <span className="text-rose-400">*</span>
-            </label>
-            <input
-              type="text"
-              required
-              value={service}
-              onChange={(e) => setService(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs font-mono text-slate-200 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
-              placeholder="e.g. payment-api"
-            />
-          </div>
+        {/* Service */}
+        <div>
+          <label className="block text-xs font-medium text-text-secondary mb-1.5">
+            Service <span className="text-danger">*</span>
+          </label>
+          <input
+            type="text"
+            required
+            value={service}
+            onChange={(e) => setService(e.target.value)}
+            className="input-base"
+            placeholder="e.g. payment-api"
+          />
+        </div>
 
+        {/* Environment + Severity */}
+        <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-[11px] font-mono text-slate-400 uppercase mb-1">Environment</label>
+            <label className="block text-xs font-medium text-text-secondary mb-1.5">
+              Environment
+            </label>
             <select
               value={environment}
               onChange={(e) => setEnvironment(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs font-mono text-slate-200 focus:outline-none focus:border-cyan-500"
+              className="input-base"
             >
-              <option value="production">production</option>
-              <option value="staging">staging</option>
-              <option value="development">development</option>
+              <option value="production">Production</option>
+              <option value="staging">Staging</option>
+              <option value="development">Development</option>
             </select>
           </div>
-
           <div>
-            <label className="block text-[11px] font-mono text-slate-400 uppercase mb-1">Severity</label>
+            <label className="block text-xs font-medium text-text-secondary mb-1.5">
+              Severity
+            </label>
             <select
               value={severity}
               onChange={(e) => setSeverity(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs font-mono text-slate-200 focus:outline-none focus:border-cyan-500"
+              className="input-base"
             >
-              <option value="critical">CRITICAL (P0)</option>
-              <option value="high">HIGH (P1)</option>
-              <option value="medium">MEDIUM (P2)</option>
-              <option value="low">LOW (P3)</option>
+              <option value="critical">🔴 Critical (P0)</option>
+              <option value="high">🟠 High (P1)</option>
+              <option value="medium">🟡 Medium (P2)</option>
+              <option value="low">🟢 Low (P3)</option>
             </select>
           </div>
         </div>
 
+        {/* Symptoms */}
         <div>
-          <label className="block text-[11px] font-mono text-slate-400 uppercase mb-1">
-            Observed Symptoms (one per line) <span className="text-rose-400">*</span>
+          <label className="block text-xs font-medium text-text-secondary mb-1.5">
+            Observed Symptoms <span className="text-danger">*</span>
+            <span className="text-text-muted font-normal ml-1">(one per line)</span>
           </label>
           <textarea
             required
-            rows={3}
+            rows={4}
             value={symptomsText}
             onChange={(e) => setSymptomsText(e.target.value)}
-            className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-xs font-mono text-slate-200 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 resize-none"
-            placeholder="HTTP 500 errors&#10;Database connection timeout&#10;Latency spike"
+            className="input-base resize-y min-h-[100px] font-mono text-[13px]"
+            placeholder="HTTP 500 errors&#10;Database timeout&#10;Latency spike"
           />
         </div>
 
+        {/* Logs */}
         <div>
-          <label className="block text-[11px] font-mono text-slate-400 uppercase mb-1">
-            Logs / Error Stacktrace (Optional)
+          <label className="block text-xs font-medium text-text-secondary mb-1.5">
+            Logs / Stacktrace
+            <span className="text-text-muted font-normal ml-1">(optional)</span>
           </label>
           <textarea
-            rows={2}
+            rows={3}
             value={logs}
             onChange={(e) => setLogs(e.target.value)}
-            className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-xs font-mono text-slate-400 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 resize-none"
-            placeholder="Paste stack traces or log lines here..."
+            className="input-base resize-y min-h-[72px] font-mono text-[12px] leading-relaxed"
+            placeholder="Paste stack traces or log lines..."
           />
         </div>
 
+        {/* Submit */}
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full flex items-center justify-center space-x-2 py-3 px-4 rounded-lg font-mono text-xs font-bold uppercase tracking-wider transition-all bg-gradient-to-r from-cyan-600 via-blue-600 to-indigo-600 hover:from-cyan-500 hover:to-indigo-500 text-white shadow-lg shadow-cyan-950/40 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+          className="btn-primary w-full py-3"
         >
           {isLoading ? (
             <>
-              <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+              <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
               </svg>
-              <span>Recalling Hindsight Memory & Reasoning with Groq...</span>
+              <span>Recalling memory & reasoning...</span>
             </>
           ) : (
             <>
-              <span>🔍</span>
-              <span>Analyze Incident & Recommend Next Action</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+              <span>Analyze Incident</span>
             </>
           )}
         </button>

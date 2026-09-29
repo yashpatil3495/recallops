@@ -144,31 +144,5 @@
     "root_cause": "Primary upstream SMTP provider network outage and DNS resolution failure",
     "resolution": "Failed over to secondary SMTP relay provider and enabled automated provider failover routing",
     "outcome": "RESOLVED"
-  },
-  {
-    "incident_id": "INC-TEST-01",
-    "service": "payment-api",
-    "environment": "production",
-    "severity": "critical",
-    "symptoms": [
-      "HTTP 500 errors",
-      "DB connection timeout"
-    ],
-    "logs": "Connection pool timeout after 30000ms",
-    "attempts": [
-      {
-        "action": "Restart pods",
-        "result": "FAILED"
-      },
-      {
-        "action": "Increase DB connection pool",
-        "result": "SUCCESS"
-      }
-    ],
-    "root_cause": "Database connection pool exhaustion under load",
-    "resolution": "Increased pool size to 150",
-    "outcome": "RESOLVED",
-    "timestamp": "2026-09-28T14:13:53.239510+00:00",
-    "failed_attempts": 1
   }
 ]

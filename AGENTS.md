@@ -6,10 +6,10 @@ Incident-intelligence AI agent with persistent memory for SRE and DevOps teams.
 RecallOps recalls past incidents from **Hindsight** memory, reasons over them using **Groq** LLMs, and recommends the next diagnostic action while strictly avoiding fixes that previously failed.
 
 ## Architecture & Workflows
-- Architecture specification: [docs/ARCHITECTURE.md](file:///e:/recallops/docs/ARCHITECTURE.md)
-- Frozen API contract: [docs/API_CONTRACT.md](file:///e:/recallops/docs/API_CONTRACT.md)
-- Rules: [.agents/rules/](file:///e:/recallops/.agents/rules/)
-- Workflows: [.agents/workflows/](file:///e:/recallops/.agents/workflows/)
+- Architecture specification: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
+- Frozen API contract: [docs/API_CONTRACT.md](docs/API_CONTRACT.md)
+- Rules: [.agents/rules/](.agents/rules/)
+- Workflows: [.agents/workflows/](.agents/workflows/)
 
 ## Strict Build Phases
 1. **Phase 0 (Bootstrap)**: Scaffolding, dependencies, env template, connectivity smoke test.
