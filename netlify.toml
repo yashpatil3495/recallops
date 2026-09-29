@@ -1,0 +1,15 @@
+# ==============================================================================
+# Netlify Configuration for RecallOps
+# https://docs.netlify.com/configure-builds/file-based-configuration/
+# ==============================================================================
+
+[build]
+  base = "frontend"
+  publish = ".next"
+  command = "npm run build"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"

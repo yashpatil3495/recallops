@@ -8,6 +8,7 @@ Strictly adheres to docs/API_CONTRACT.md and .agents/rules/10-backend.md.
 from __future__ import annotations
 
 import logging
+import os
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
@@ -37,10 +38,18 @@ app = FastAPI(
     version="1.1.0",
 )
 
-# CORS: Allow only http://localhost:3000 per rule 10-backend.md
+# CORS: allow http://localhost:3000 and optional configured origins from env, never "*" per rule 10-backend.md
+cors_env = os.getenv("CORS_ORIGINS", "")
+allowed_origins = ["http://localhost:3000"]
+if cors_env:
+    for origin in cors_env.split(","):
+        cleaned = origin.strip()
+        if cleaned and cleaned != "*":
+            allowed_origins.append(cleaned)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

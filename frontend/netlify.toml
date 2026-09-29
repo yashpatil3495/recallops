@@ -1,0 +1,13 @@
+# ==============================================================================
+# Netlify Configuration (Subdirectory fallback if Base Directory is set to frontend)
+# ==============================================================================
+
+[build]
+  publish = ".next"
+  command = "npm run build"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
