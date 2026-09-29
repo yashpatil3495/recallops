@@ -5,6 +5,12 @@ export const metadata: Metadata = {
   title: "RecallOps — Incident Intelligence with Persistent Memory",
   description:
     "RecallOps remembers previous incidents, identifies recurring patterns, and recommends safer remediation actions based on historical outcomes.",
+  icons: {
+    icon: [
+      { url: "/icon.svg", type: "image/svg+xml" },
+      { url: "/favicon.ico", type: "image/x-icon" },
+    ],
+  },
 };
 
 export default function RootLayout({
